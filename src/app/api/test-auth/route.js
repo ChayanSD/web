@@ -1,5 +1,5 @@
 import { verify } from "argon2";
-import sql from "@/app/api/utils/sql";
+import sql from "@/app/api/utils/sql.js";
 
 export async function POST(request) {
   try {

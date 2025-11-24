@@ -1,16 +1,16 @@
-import sql from "@/app/api/utils/sql";
+import sql from "@/app/api/utils/sql.js";
 import { env } from "@/lib/env";
 import { KeySecurityManager, SecureKeyStore } from "@/lib/security";
 
 export async function GET() {
   const startTime = Date.now();
-  
+
   try {
     // Check database connectivity
     const dbStart = Date.now();
     await sql`SELECT 1 as health_check`;
     const dbTime = Date.now() - dbStart;
-    
+
     // Check OpenAI API (if key is provided)
     let openaiStatus = "not_configured";
     if (env.OPENAI_API_KEY) {
@@ -37,9 +37,9 @@ export async function GET() {
       keyValidationStatus = "invalid";
       console.error("Key validation failed:", error.message);
     }
-    
+
     const responseTime = Date.now() - startTime;
-    
+
     const health = {
       status: "healthy",
       timestamp: new Date().toISOString(),
@@ -63,8 +63,8 @@ export async function GET() {
         },
       },
     };
-    
-    return Response.json(health, { 
+
+    return Response.json(health, {
       status: 200,
       headers: {
         "Cache-Control": "no-cache, no-store, must-revalidate",
@@ -72,10 +72,10 @@ export async function GET() {
         "Expires": "0",
       },
     });
-    
+
   } catch (error) {
     console.error("Health check failed:", error);
-    
+
     const health = {
       status: "unhealthy",
       timestamp: new Date().toISOString(),
@@ -87,8 +87,8 @@ export async function GET() {
         },
       },
     };
-    
-    return Response.json(health, { 
+
+    return Response.json(health, {
       status: 503,
       headers: {
         "Cache-Control": "no-cache, no-store, must-revalidate",

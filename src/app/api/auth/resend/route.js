@@ -1,5 +1,5 @@
-import sql from "@/app/api/utils/sql";
-import { sendEmail } from "@/app/api/utils/send-email";
+import sql from "@/app/api/utils/sql.js";
+import { sendEmail } from "@/app/api/utils/send-email.js";
 import crypto from "crypto";
 
 // Rate limiting for resend attempts

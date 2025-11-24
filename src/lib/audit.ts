@@ -1,6 +1,5 @@
 import { EnvEncryption } from './encryption';
-import sql from '@/app/api/utils/sql';
-
+import sql from "@/app/api/utils/sql.js"
 // Enhanced audit logging for key access
 export class KeyAuditLogger {
   private static instance: KeyAuditLogger;

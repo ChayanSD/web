@@ -1,4 +1,4 @@
-import sql from "@/app/api/utils/sql";
+import sql from "@/app/api/utils/sql.js";
 import { getToken } from "@auth/core/jwt";
 import { accountDeleteSchema } from "@/lib/validation";
 import { unauthorized, badRequest, handleValidationError, handleDatabaseError } from "@/lib/errors";
@@ -42,34 +42,34 @@ export async function POST(request) {
       await sql.begin(async (sql) => {
         // Delete receipts_items first (if table exists)
         await sql`DELETE FROM receipts_items WHERE receipt_id IN (SELECT id FROM receipts WHERE user_id = ${userId})`;
-        
+
         // Delete receipts
         await sql`DELETE FROM receipts WHERE user_id = ${userId}`;
-        
+
         // Delete reports
         await sql`DELETE FROM reports WHERE user_id = ${userId}`;
-        
+
         // Delete company_settings
         await sql`DELETE FROM company_settings WHERE user_id = ${userId}`;
-        
+
         // Delete audit_log entries
         await sql`DELETE FROM audit_log WHERE user_id = ${userId}`;
-        
+
         // Delete user
         await sql`DELETE FROM auth_users WHERE id = ${userId}`;
       });
 
       console.log(`User ${user.email} (ID: ${userId}) and all associated data deleted successfully`);
 
-      return Response.json({ 
-        success: true, 
-        message: "Account and all associated data have been permanently deleted" 
+      return Response.json({
+        success: true,
+        message: "Account and all associated data have been permanently deleted"
       });
 
     } catch (error) {
       console.error("Error during account deletion:", error);
-      return Response.json({ 
-        error: "Failed to delete account. Please contact support if this issue persists." 
+      return Response.json({
+        error: "Failed to delete account. Please contact support if this issue persists."
       }, { status: 500 });
     }
 

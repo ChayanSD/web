@@ -1,4 +1,4 @@
-import sql from "@/app/api/utils/sql";
+import sql from "@/app/api/utils/sql.js";
 import { getToken } from "@auth/core/jwt";
 
 export async function GET(request) {

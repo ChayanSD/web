@@ -1,20 +1,20 @@
-import sql from "@/app/api/utils/sql";
+import sql from "@/app/api/utils/sql.js";
 import Stripe from "stripe";
 
 // Initialize Stripe with environment-based key
 const getStripeInstance = () => {
   const isLive = process.env.STRIPE_MODE === 'live';
   const secretKey = isLive ? process.env.STRIPE_SECRET_KEY_LIVE : process.env.STRIPE_SECRET_KEY_TEST;
-  
+
   // Fallback to old format for backward compatibility
   if (!secretKey && process.env.STRIPE_SECRET_KEY) {
     return new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: "2024-06-20" });
   }
-  
+
   if (!secretKey) {
     throw new Error(`Stripe ${isLive ? 'live' : 'test'} secret key not configured`);
   }
-  
+
   return new Stripe(secretKey, { apiVersion: "2024-06-20" });
 };
 
@@ -22,16 +22,16 @@ const getStripeInstance = () => {
 const getWebhookSecret = () => {
   const isLive = process.env.STRIPE_MODE === 'live';
   const webhookSecret = isLive ? process.env.STRIPE_WEBHOOK_SECRET_LIVE : process.env.STRIPE_WEBHOOK_SECRET_TEST;
-  
+
   // Fallback to old format for backward compatibility
   if (!webhookSecret && process.env.STRIPE_WEBHOOK_SECRET) {
     return process.env.STRIPE_WEBHOOK_SECRET;
   }
-  
+
   if (!webhookSecret) {
     throw new Error(`Stripe ${isLive ? 'live' : 'test'} webhook secret not configured`);
   }
-  
+
   return webhookSecret;
 };
 
@@ -140,7 +140,7 @@ export const POST = async (request) => {
   try {
     const stripe = getStripeInstance();
     const webhookSecret = getWebhookSecret();
-    
+
     if (!webhookSecret) {
       console.log(
         "Stripe webhook secret not configured, skipping webhook verification",

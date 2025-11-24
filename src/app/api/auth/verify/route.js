@@ -1,4 +1,4 @@
-import sql from "@/app/api/utils/sql";
+import sql from "@/app/api/utils/sql.js";
 
 async function logAuditEvent(userId, event, meta = {}) {
   try {

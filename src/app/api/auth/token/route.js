@@ -1,5 +1,5 @@
 import { getToken } from "@auth/core/jwt";
-import sql from "@/app/api/utils/sql";
+import sql from "@/app/api/utils/sql.js";
 
 export async function GET(request) {
   const [token, jwt] = await Promise.all([

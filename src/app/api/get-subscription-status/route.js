@@ -1,4 +1,4 @@
-import sql from "@/app/api/utils/sql";
+import sql from "@/app/api/utils/sql.js";
 import { auth } from "@/auth";
 
 export const POST = async (request) => {
@@ -44,7 +44,7 @@ export const POST = async (request) => {
     // Check if Stripe is configured (support both old and new format)
     const isLive = process.env.STRIPE_MODE === 'live';
     const hasStripeConfig = (isLive ? process.env.STRIPE_SECRET_KEY_LIVE : process.env.STRIPE_SECRET_KEY_TEST) ||
-                            process.env.STRIPE_SECRET_KEY;
+      process.env.STRIPE_SECRET_KEY;
 
     // If we have a stripe customer ID, Stripe is configured, and status needs updating, check with Stripe
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
@@ -62,11 +62,11 @@ export const POST = async (request) => {
         const Stripe = (await import("stripe")).default;
         const secretKey = isLive ? process.env.STRIPE_SECRET_KEY_LIVE : process.env.STRIPE_SECRET_KEY_TEST;
         const finalKey = secretKey || process.env.STRIPE_SECRET_KEY;
-        
+
         if (!finalKey) {
           throw new Error("Stripe secret key not configured");
         }
-        
+
         const stripe = new Stripe(finalKey, { apiVersion: "2024-06-20" });
 
         const customer = await stripe.customers.retrieve(stripe_customer_id, {

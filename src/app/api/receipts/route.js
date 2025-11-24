@@ -1,6 +1,6 @@
-import sql from "@/app/api/utils/sql";
+import sql from "@/app/api/utils/sql.js";
 import { auth } from "@/auth";
-import { logActivity, EVENTS } from "@/app/api/utils/audit";
+import { logActivity, EVENTS } from "@/app/api/utils/audit.js";
 import { receiptCreateSchema, paginationSchema } from "@/lib/validation";
 import { badRequest, unauthorized, internalServerError, handleValidationError, handleDatabaseError, paymentRequired } from "@/lib/errors";
 import { limitByUser, RATE_LIMITS } from "@/lib/rateLimit";
@@ -15,7 +15,7 @@ export async function GET(request) {
 
     const userId = session.user.id;
     const { searchParams } = new URL(request.url);
-    
+
     // Parse and validate query parameters
     const queryParams = {
       page: parseInt(searchParams.get("page") || "1"),
@@ -93,7 +93,7 @@ export async function GET(request) {
     const countResult = await sql(countQuery, countParams);
     const total = parseInt(countResult[0]?.total || "0");
 
-    return Response.json({ 
+    return Response.json({
       receipts,
       pagination: {
         page,
@@ -153,10 +153,10 @@ export async function POST(request) {
     `;
 
     if (duplicateCheck.length > 0) {
-      return Response.json({ 
+      return Response.json({
         error: "Duplicate receipt detected",
-        fieldErrors: { 
-          general: "A receipt with the same merchant, amount, and date already exists within the last 90 days" 
+        fieldErrors: {
+          general: "A receipt with the same merchant, amount, and date already exists within the last 90 days"
         }
       }, { status: 409 });
     }

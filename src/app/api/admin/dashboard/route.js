@@ -1,11 +1,11 @@
-import sql from "@/app/api/utils/sql";
+import sql from "@/app/api/utils/sql.js";
 import { withAdmin } from "@/lib/auth";
 import { handleDatabaseError } from "@/lib/errors";
 
 // Check if user is admin
 async function isAdmin(userId) {
   const adminEmails = process.env.ADMIN_EMAILS?.split(',').map(email => email.trim()) || [];
-  
+
   if (adminEmails.length === 0) {
     return false;
   }
@@ -91,17 +91,17 @@ async function getMetrics() {
   `;
 
   // Calculate changes
-  const receiptsChange = receiptsYesterday[0]?.count > 0 
+  const receiptsChange = receiptsYesterday[0]?.count > 0
     ? Math.round(((receiptsToday[0]?.count - receiptsYesterday[0]?.count) / receiptsYesterday[0]?.count) * 100)
     : 0;
 
-  const reportsChange = reportsYesterday[0]?.count > 0 
+  const reportsChange = reportsYesterday[0]?.count > 0
     ? Math.round(((reportsToday[0]?.count - reportsYesterday[0]?.count) / reportsYesterday[0]?.count) * 100)
     : 0;
 
   const totalOcrAttempts = (ocrAttempts[0]?.count || 0) + (ocrFailures[0]?.count || 0);
-  const ocrSuccessRate = totalOcrAttempts > 0 
-    ? (ocrAttempts[0]?.count || 0) / totalOcrAttempts 
+  const ocrSuccessRate = totalOcrAttempts > 0
+    ? (ocrAttempts[0]?.count || 0) / totalOcrAttempts
     : 0;
 
   return {

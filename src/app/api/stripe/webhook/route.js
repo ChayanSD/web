@@ -1,16 +1,16 @@
 import Stripe from "stripe";
-import sql from "@/app/api/utils/sql";
+import sql from "@/app/api/utils/sql.js";
 import { internalServerError } from "@/lib/errors";
 
 // Initialize Stripe with environment-based key
 const getStripeInstance = () => {
   const isLive = process.env.STRIPE_MODE === 'live';
   const secretKey = isLive ? process.env.STRIPE_SECRET_KEY_LIVE : process.env.STRIPE_SECRET_KEY_TEST;
-  
+
   if (!secretKey) {
     throw new Error(`Stripe ${isLive ? 'live' : 'test'} secret key not configured`);
   }
-  
+
   return new Stripe(secretKey, { apiVersion: "2024-06-20" });
 };
 
@@ -18,11 +18,11 @@ const getStripeInstance = () => {
 const getWebhookSecret = () => {
   const isLive = process.env.STRIPE_MODE === 'live';
   const webhookSecret = isLive ? process.env.STRIPE_WEBHOOK_SECRET_LIVE : process.env.STRIPE_WEBHOOK_SECRET_TEST;
-  
+
   if (!webhookSecret) {
     throw new Error(`Stripe ${isLive ? 'live' : 'test'} webhook secret not configured`);
   }
-  
+
   return webhookSecret;
 };
 
@@ -41,7 +41,7 @@ export async function POST(req) {
   try {
     const stripe = getStripeInstance();
     const webhookSecret = getWebhookSecret();
-    
+
     event = stripe.webhooks.constructEvent(body, sig, webhookSecret);
   } catch (err) {
     console.error("Webhook signature verification failed:", err.message);
@@ -93,7 +93,7 @@ export async function POST(req) {
 
 async function handleCheckoutSessionCompleted(session) {
   console.log("Processing checkout session completed:", session.id);
-  
+
   const userId = parseInt(session.metadata.user_id);
   const plan = session.metadata.plan;
   const billingCycle = session.metadata.billing_cycle;
@@ -120,11 +120,11 @@ async function handleCheckoutSessionCompleted(session) {
     await sql`
       INSERT INTO subscription_events (user_id, event_type, new_tier, new_status, stripe_event_id, metadata)
       VALUES (${userId}, 'subscription_created', ${plan}, 'active', ${session.id}, ${JSON.stringify({
-        billingCycle,
-        referralCode,
-        sessionId: session.id,
-        customerId: session.customer,
-      })})
+      billingCycle,
+      referralCode,
+      sessionId: session.id,
+      customerId: session.customer,
+    })})
     `;
 
     // Handle referral bonus if applicable
@@ -141,7 +141,7 @@ async function handleCheckoutSessionCompleted(session) {
 
 async function handleSubscriptionCreated(subscription) {
   console.log("Processing subscription created:", subscription.id);
-  
+
   const customerId = subscription.customer;
   const subscriptionId = subscription.id;
   const status = subscription.status;
@@ -163,7 +163,7 @@ async function handleSubscriptionCreated(subscription) {
 
     // Determine tier from subscription items
     const tier = determineTierFromSubscription(subscription);
-    
+
     // Update user subscription
     await sql`
       UPDATE auth_users 
@@ -179,10 +179,10 @@ async function handleSubscriptionCreated(subscription) {
     await sql`
       INSERT INTO subscription_events (user_id, event_type, new_tier, new_status, stripe_event_id, metadata)
       VALUES (${userId}, 'subscription_created', ${tier}, ${status}, ${subscription.id}, ${JSON.stringify({
-        subscriptionId,
-        customerId,
-        currentPeriodEnd: currentPeriodEnd.toISOString(),
-      })})
+      subscriptionId,
+      customerId,
+      currentPeriodEnd: currentPeriodEnd.toISOString(),
+    })})
     `;
 
     console.log(`User ${userId} subscription created: ${tier} - ${status}`);
@@ -194,7 +194,7 @@ async function handleSubscriptionCreated(subscription) {
 
 async function handleSubscriptionUpdated(subscription) {
   console.log("Processing subscription updated:", subscription.id);
-  
+
   const subscriptionId = subscription.id;
   const status = subscription.status;
   const currentPeriodEnd = new Date(subscription.current_period_end * 1000);
@@ -214,7 +214,7 @@ async function handleSubscriptionUpdated(subscription) {
     const userId = users[0].id;
     const oldTier = users[0].subscription_tier;
     const tier = determineTierFromSubscription(subscription);
-    
+
     // Update user subscription
     await sql`
       UPDATE auth_users 
@@ -229,9 +229,9 @@ async function handleSubscriptionUpdated(subscription) {
     await sql`
       INSERT INTO subscription_events (user_id, event_type, old_tier, new_tier, old_status, new_status, stripe_event_id, metadata)
       VALUES (${userId}, 'subscription_updated', ${oldTier}, ${tier}, 'active', ${status}, ${subscription.id}, ${JSON.stringify({
-        subscriptionId,
-        currentPeriodEnd: currentPeriodEnd.toISOString(),
-      })})
+      subscriptionId,
+      currentPeriodEnd: currentPeriodEnd.toISOString(),
+    })})
     `;
 
     console.log(`User ${userId} subscription updated: ${oldTier} -> ${tier} - ${status}`);
@@ -243,7 +243,7 @@ async function handleSubscriptionUpdated(subscription) {
 
 async function handleSubscriptionDeleted(subscription) {
   console.log("Processing subscription deleted:", subscription.id);
-  
+
   const subscriptionId = subscription.id;
 
   try {
@@ -259,7 +259,7 @@ async function handleSubscriptionDeleted(subscription) {
     }
 
     const userId = users[0].id;
-    
+
     // Downgrade user to free tier
     await sql`
       UPDATE auth_users 
@@ -275,9 +275,9 @@ async function handleSubscriptionDeleted(subscription) {
     await sql`
       INSERT INTO subscription_events (user_id, event_type, new_tier, new_status, stripe_event_id, metadata)
       VALUES (${userId}, 'subscription_canceled', 'free', 'canceled', ${subscription.id}, ${JSON.stringify({
-        subscriptionId,
-        canceledAt: new Date().toISOString(),
-      })})
+      subscriptionId,
+      canceledAt: new Date().toISOString(),
+    })})
     `;
 
     console.log(`User ${userId} subscription canceled and downgraded to free`);
@@ -289,7 +289,7 @@ async function handleSubscriptionDeleted(subscription) {
 
 async function handleInvoicePaymentSucceeded(invoice) {
   console.log("Processing invoice payment succeeded:", invoice.id);
-  
+
   const customerId = invoice.customer;
   const subscriptionId = invoice.subscription;
 
@@ -306,7 +306,7 @@ async function handleInvoicePaymentSucceeded(invoice) {
     }
 
     const userId = users[0].id;
-    
+
     // Update subscription status to active
     await sql`
       UPDATE auth_users 
@@ -318,11 +318,11 @@ async function handleInvoicePaymentSucceeded(invoice) {
     await sql`
       INSERT INTO subscription_events (user_id, event_type, stripe_event_id, metadata)
       VALUES (${userId}, 'payment_succeeded', ${invoice.id}, ${JSON.stringify({
-        invoiceId: invoice.id,
-        amount: invoice.amount_paid,
-        currency: invoice.currency,
-        subscriptionId,
-      })})
+      invoiceId: invoice.id,
+      amount: invoice.amount_paid,
+      currency: invoice.currency,
+      subscriptionId,
+    })})
     `;
 
     console.log(`User ${userId} payment succeeded for invoice ${invoice.id}`);
@@ -334,7 +334,7 @@ async function handleInvoicePaymentSucceeded(invoice) {
 
 async function handleInvoicePaymentFailed(invoice) {
   console.log("Processing invoice payment failed:", invoice.id);
-  
+
   const customerId = invoice.customer;
 
   try {
@@ -350,7 +350,7 @@ async function handleInvoicePaymentFailed(invoice) {
     }
 
     const userId = users[0].id;
-    
+
     // Update subscription status to past_due
     await sql`
       UPDATE auth_users 
@@ -362,11 +362,11 @@ async function handleInvoicePaymentFailed(invoice) {
     await sql`
       INSERT INTO subscription_events (user_id, event_type, stripe_event_id, metadata)
       VALUES (${userId}, 'payment_failed', ${invoice.id}, ${JSON.stringify({
-        invoiceId: invoice.id,
-        amount: invoice.amount_due,
-        currency: invoice.currency,
-        nextPaymentAttempt: invoice.next_payment_attempt,
-      })})
+      invoiceId: invoice.id,
+      amount: invoice.amount_due,
+      currency: invoice.currency,
+      nextPaymentAttempt: invoice.next_payment_attempt,
+    })})
     `;
 
     console.log(`User ${userId} payment failed for invoice ${invoice.id}`);
@@ -378,7 +378,7 @@ async function handleInvoicePaymentFailed(invoice) {
 
 async function handleTrialWillEnd(subscription) {
   console.log("Processing trial will end:", subscription.id);
-  
+
   const customerId = subscription.customer;
   const trialEnd = new Date(subscription.trial_end * 1000);
 
@@ -395,14 +395,14 @@ async function handleTrialWillEnd(subscription) {
     }
 
     const userId = users[0].id;
-    
+
     // Log trial ending event
     await sql`
       INSERT INTO subscription_events (user_id, event_type, stripe_event_id, metadata)
       VALUES (${userId}, 'trial_ending', ${subscription.id}, ${JSON.stringify({
-        trialEnd: trialEnd.toISOString(),
-        subscriptionId: subscription.id,
-      })})
+      trialEnd: trialEnd.toISOString(),
+      subscriptionId: subscription.id,
+    })})
     `;
 
     console.log(`User ${userId} trial ending on ${trialEnd.toISOString()}`);
@@ -415,10 +415,10 @@ async function handleTrialWillEnd(subscription) {
 function determineTierFromSubscription(subscription) {
   // Determine tier based on subscription items
   const items = subscription.items.data;
-  
+
   for (const item of items) {
     const priceId = item.price.id;
-    
+
     // Check against configured price IDs
     if (priceId === process.env.PRICE_PRO_MONTHLY || priceId === process.env.PRICE_PRO_YEARLY) {
       return 'pro';
@@ -427,7 +427,7 @@ function determineTierFromSubscription(subscription) {
       return 'premium';
     }
   }
-  
+
   // Fallback to pro if we can't determine
   return 'pro';
 }

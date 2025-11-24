@@ -1,6 +1,6 @@
-import sql from "@/app/api/utils/sql";
+import sql from "@/app/api/utils/sql.js";
 import { auth } from "@/auth";
-import { logActivity, EVENTS } from "@/app/api/utils/audit";
+import { logActivity, EVENTS } from "@/app/api/utils/audit.js";
 import { receiptUpdateSchema } from "@/lib/validation";
 import { unauthorized, notFound, handleValidationError, handleDatabaseError } from "@/lib/errors";
 

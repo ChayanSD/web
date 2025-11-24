@@ -1,4 +1,4 @@
-import sql from "@/app/api/utils/sql";
+import sql from "@/app/api/utils/sql.js";
 import { auth } from "@/auth";
 import Stripe from "stripe";
 
@@ -6,16 +6,16 @@ import Stripe from "stripe";
 const getStripeInstance = () => {
   const isLive = process.env.STRIPE_MODE === 'live';
   const secretKey = isLive ? process.env.STRIPE_SECRET_KEY_LIVE : process.env.STRIPE_SECRET_KEY_TEST;
-  
+
   // Fallback to old format for backward compatibility
   if (!secretKey && process.env.STRIPE_SECRET_KEY) {
     return new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: "2024-06-20" });
   }
-  
+
   if (!secretKey) {
     throw new Error(`Stripe ${isLive ? 'live' : 'test'} secret key not configured`);
   }
-  
+
   return new Stripe(secretKey, { apiVersion: "2024-06-20" });
 };
 

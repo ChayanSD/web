@@ -1,4 +1,4 @@
-import sql from "@/app/api/utils/sql";
+import sql from "@/app/api/utils/sql.js";
 import { auth } from "@/auth";
 import Stripe from "stripe";
 import { badRequest, unauthorized, internalServerError } from "@/lib/errors";
@@ -8,11 +8,11 @@ import { getUserSubscriptionInfo } from "@/lib/subscriptionGuard";
 const getStripeInstance = () => {
   const isLive = process.env.STRIPE_MODE === 'live';
   const secretKey = isLive ? process.env.STRIPE_SECRET_KEY_LIVE : process.env.STRIPE_SECRET_KEY_TEST;
-  
+
   if (!secretKey) {
     throw new Error(`Stripe ${isLive ? 'live' : 'test'} secret key not configured`);
   }
-  
+
   return new Stripe(secretKey, { apiVersion: "2024-06-20" });
 };
 
@@ -212,13 +212,13 @@ export const POST = async (request) => {
     await sql`
       INSERT INTO subscription_events (user_id, event_type, new_tier, metadata)
       VALUES (${userId}, 'checkout_started', ${product}, ${JSON.stringify({
-        billing_cycle: billing_cycle,
-        referralCode,
-        sessionId: checkoutSession.id,
-      })})
+      billing_cycle: billing_cycle,
+      referralCode,
+      sessionId: checkoutSession.id,
+    })})
     `;
 
-    return Response.json({ 
+    return Response.json({
       url: checkoutSession.url,
       sessionId: checkoutSession.id,
     });

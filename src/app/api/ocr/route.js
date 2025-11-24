@@ -4,7 +4,7 @@ import { unauthorized, badRequest, handleValidationError, handleDatabaseError } 
 import { limitByUser, RATE_LIMITS } from "@/lib/rateLimit";
 import { sanitizeUrl, sanitizeText } from "@/lib/sanitize";
 import { withKeyProtection, SecureKeyStore } from "@/lib/security";
-import sql from "@/app/api/utils/sql";
+import sql from "@/app/api/utils/sql.js";
 
 // Convert image URL to base64
 async function imageUrlToBase64(imageUrl) {
@@ -128,7 +128,7 @@ Return ONLY the JSON response with no additional formatting or text:`,
     // Use GPT-4 Vision for receipt analysis with OpenAI API (with key protection)
     const response = await withKeyProtection('openai', 'vision_analysis', async () => {
       const openaiKey = SecureKeyStore.getKey('openai');
-      
+
       return fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
         headers: {
@@ -150,7 +150,7 @@ Return ONLY the JSON response with no additional formatting or text:`,
     if (!response.ok) {
       const errorText = await response.text();
       console.error("OpenAI API error:", errorText);
-      
+
       // Handle specific OpenAI errors
       if (response.status === 401) {
         throw new Error("OpenAI API key invalid or missing");
@@ -159,7 +159,7 @@ Return ONLY the JSON response with no additional formatting or text:`,
       } else if (response.status === 500) {
         throw new Error("OpenAI API server error");
       }
-      
+
       throw new Error(`OpenAI API failed: ${response.status} - ${errorText}`);
     }
 
@@ -459,23 +459,23 @@ function normalizeCurrency(amount, currency = "USD") {
   // Extract numeric value and currency symbol
   const numericMatch = String(amount).match(/(\d+\.?\d*)/);
   const numericValue = numericMatch ? parseFloat(numericMatch[1]) : 0;
-  
+
   // Detect currency symbol and normalize
   const symbolMatch = String(amount).match(/[$€£¥₹]/);
   let detectedCurrency = currency;
-  
+
   if (symbolMatch) {
     const symbol = symbolMatch[0];
     const symbolMap = {
       '$': 'USD',
-      '€': 'EUR', 
+      '€': 'EUR',
       '£': 'GBP',
       '¥': 'JPY',
       '₹': 'INR'
     };
     detectedCurrency = symbolMap[symbol] || currency;
   }
-  
+
   return {
     amount: numericValue,
     currency: detectedCurrency,
@@ -485,7 +485,7 @@ function normalizeCurrency(amount, currency = "USD") {
 
 function normalizeMerchant(merchantName) {
   if (!merchantName) return "Unknown Merchant";
-  
+
   // Remove common noise patterns
   let normalized = merchantName
     .replace(/\*TRIP.*$/i, '') // Remove "*TRIP 3H..." patterns
@@ -494,19 +494,19 @@ function normalizeMerchant(merchantName) {
     .replace(/\s+\d{4}.*$/i, '') // Remove 4-digit codes
     .replace(/\s+-\s+.*$/i, '') // Remove location suffixes
     .trim();
-  
+
   // Collapse multiple spaces
   normalized = normalized.replace(/\s+/g, ' ');
-  
+
   // Title case
   normalized = normalized.replace(/\b\w/g, l => l.toUpperCase());
-  
+
   return normalized || "Unknown Merchant";
 }
 
 function parseDateRobust(dateString) {
   if (!dateString) return null;
-  
+
   // Try various date formats
   const formats = [
     /(\d{4})-(\d{1,2})-(\d{1,2})/, // YYYY-MM-DD
@@ -515,12 +515,12 @@ function parseDateRobust(dateString) {
     /(\d{1,2})\/(\d{1,2})\/(\d{2})/, // MM/DD/YY
     /(\d{1,2})-(\d{1,2})-(\d{2})/, // MM-DD-YY
   ];
-  
+
   for (const format of formats) {
     const match = dateString.match(format);
     if (match) {
       let year, month, day;
-      
+
       if (format === formats[0]) {
         // YYYY-MM-DD
         [, year, month, day] = match;
@@ -532,14 +532,14 @@ function parseDateRobust(dateString) {
         [, month, day, year] = match;
         year = parseInt(year) < 50 ? 2000 + parseInt(year) : 1900 + parseInt(year);
       }
-      
+
       const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
       if (!isNaN(date.getTime())) {
         return date.toISOString().split('T')[0];
       }
     }
   }
-  
+
   return null;
 }
 
@@ -554,7 +554,7 @@ async function checkForDuplicate(userId, merchant, amount, date) {
         AND created_at > NOW() - INTERVAL '90 days'
       LIMIT 1
     `;
-    
+
     return duplicates.length > 0;
   } catch (error) {
     console.error("Duplicate check error:", error);
@@ -606,13 +606,13 @@ export async function POST(request) {
     const normalizedMerchant = normalizeMerchant(extractedData.merchant_name);
     const currencyData = normalizeCurrency(extractedData.amount, extractedData.currency);
     const normalizedDate = parseDateRobust(extractedData.receipt_date) || extractedData.receipt_date;
-    
+
     // Check for duplicates
     const isDuplicate = await checkForDuplicate(userId, normalizedMerchant, currencyData.amount, normalizedDate);
-    
+
     // Determine confidence and review flags
-    const confidence = extractedData.confidence === "high" ? 0.9 : 
-                     extractedData.confidence === "medium" ? 0.7 : 0.5;
+    const confidence = extractedData.confidence === "high" ? 0.9 :
+      extractedData.confidence === "medium" ? 0.7 : 0.5;
     const needsReview = confidence < 0.72;
 
     const processedData = {

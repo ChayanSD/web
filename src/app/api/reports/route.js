@@ -1,4 +1,4 @@
-import sql from "@/app/api/utils/sql";
+import sql from "@/app/api/utils/sql.js";
 import { getToken } from "@auth/core/jwt";
 import { generatePDF } from "../exports/pdf/utils/pdfGenerator";
 import { reportCreateSchema } from "@/lib/validation";
@@ -126,10 +126,10 @@ function convertToPDFFormat(
       notes: companySetting?.notes
         ? [companySetting.notes]
         : [
-            "Submit receipts within 30 days",
-            "Business expenses only",
-            "Approval required for amounts over $100",
-          ],
+          "Submit receipts within 30 days",
+          "Business expenses only",
+          "Approval required for amounts over $100",
+        ],
       violations: [],
     },
     summary: {
