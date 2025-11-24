@@ -1,0 +1,1 @@
+{"version":"3.2.4","results":[[":tests/pdf.snapshot.spec.ts",{"duration":62.98883390426636,"failed":true}],[":tests/api/reports.spec.ts",{"duration":5.663832664489746,"failed":false}],[":tests/api/receipts.spec.ts",{"duration":17.387875080108643,"failed":false}]]}
