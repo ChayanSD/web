@@ -35,6 +35,7 @@ export default defineConfig({
   build: {
     target: 'esnext',
     ssrEmitAssets: true,
+    sourcemap: false,
   },
   ssr: {
     target: 'node',
